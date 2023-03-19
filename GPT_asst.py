@@ -193,7 +193,7 @@ def main():
                         num = num_list[0]
                         if num >= 7:
                             print(
-                                "Insufficient resources to generate {num} images. Generating 5 images."
+                                "Insufficient resources to generate {num} images. Generating 6 images."
                             )
                             transcript = "dalle tranccript"
                             num = 6
