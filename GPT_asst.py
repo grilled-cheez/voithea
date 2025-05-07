@@ -1,4 +1,4 @@
-from openai import error
+# from openai import error
 import openai
 import datetime
 import pyttsx3 as tts
@@ -12,7 +12,7 @@ import json
 import PySimpleGUI as sg
 from AppOpener import open as appopen
 import textwrap as tw
-
+import pyaudio
 stop_value = 0
 engine = tts.init("sapi5")
 voices = engine.getProperty("voices")
@@ -26,7 +26,7 @@ mypass = os.environ.get("pass_temp")
 # mute button linked heree
 mute_value = 0
 lq = []
-state = ''
+state = ""
 
 
 def speak(audio):
@@ -40,12 +40,14 @@ def play_song():
     pass
 
 
-def dall_e_layout(urls):  # function takes the list of urls of the generated images and produces a well laid output requires an index.txt file and an empty index.html file
+def dall_e_layout(
+    urls,
+):  # function takes the list of urls of the generated images and produces a well laid output requires an index.txt file and an empty index.html file
     h = 0
     w = 0
     # def dall_e_layout(urls):  # function takes the list of urls of the generated images and produces a well laid output requires an index.txt file and an empty index.html file
-    f = open('index.txt', 'r+')
-    webpage = open('index.html', 'w+')
+    f = open("index.txt", "r+")
+    webpage = open("index.html", "w+")
     webcode = f.read()
     num = len(urls)
 
@@ -58,25 +60,30 @@ def dall_e_layout(urls):  # function takes the list of urls of the generated ima
     h = 730
     w = 1.035 * w1 * 341
     if '<div class="container">' in webcode:
-        ind = webcode.index('<div class="container">') + \
-            len('<div class="container">')
+        ind = webcode.index('<div class="container">') + len('<div class="container">')
         for i in range(0, len(urls), 2):
-            image_design = ''
-            image_design = image_design + \
-                f'<div class="image"> <img src="{urls[i]}" height="341px" width="341px"/> </div> '
+            image_design = ""
+            image_design = (
+                image_design
+                + f'<div class="image"> <img src="{urls[i]}" height="341px" width="341px"/> </div> '
+            )
             webcode = webcode[:ind] + image_design + webcode[ind:]
-        ind1 = webcode.index('<div class="container1">') + \
-            len('<div class="container1">')
+        ind1 = webcode.index('<div class="container1">') + len(
+            '<div class="container1">'
+        )
         for i in range(1, len(urls), 2):
-            image_design = ''
-            image_design = image_design + \
-                f'<div class="image"> <img src="{urls[i]}" height="341px" width="341px"/> </div> '
+            image_design = ""
+            image_design = (
+                image_design
+                + f'<div class="image"> <img src="{urls[i]}" height="341px" width="341px"/> </div> '
+            )
             webcode = webcode[:ind1] + image_design + webcode[ind1:]
 
     webpage.write(webcode)
     webpage.close()
     window = webview.create_window(
-        'Images', 'index.html', width=int(w*1.26), height=int(h*1.28))
+        "Images", "index.html", width=int(w * 1.26), height=int(h * 1.28)
+    )
     webview.start()
 
 
@@ -122,7 +129,8 @@ def update_chat(messages, role, content):
 
 def get_chatgpt_response(messages):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo", messages=messages,
+        model="gpt-3.5-turbo",
+        messages=messages,
     )
     return response["choices"][0]["message"]["content"]
 
@@ -146,21 +154,21 @@ def main():
 
     if stop_value == 0:
         print("""My name is Voithea. How can I help you?\n""")
-        lq.append(f'Response: My name is Voithea. How can I help you?\n')
+        lq.append(f"Response: My name is Voithea. How can I help you?\n")
         window.refresh()
         global y
         messages = [
             {
                 "role": "system",
-                        "content": "You are called voitheia, my personal assistant.",
+                "content": "You are called voitheia, my personal assistant.",
             },
             {
                 "role": "user",
-                        "content": "I am User.",
+                "content": "I am User.",
             },
         ]
         while y == 1:
-            transcript = ''
+            transcript = ""
             q = "a"
             if q == "":
                 q = takeCommand()
@@ -201,7 +209,7 @@ def main():
                         q = q.replace(i, "")
                     dalle_gen(q, num)
 
-                    lq.append(f'Response : Your images have been generated')
+                    lq.append(f"Response : Your images have been generated")
                     window["-LB-"].update(lq)
                     window.refresh()
 
@@ -221,7 +229,7 @@ def main():
                     if "in" in q.split():
                         url = q.split()[1]
                         print("Opening images...\n")
-                        state = 'Generating...'
+                        state = "Generating..."
 
                         window["-ST-"].update(state)
                         window.refresh()
@@ -245,10 +253,14 @@ def main():
                     stmt = f"'{q}'. Get me the subject , content and the reciever from this sentence in a python dictionary with double quotes for each element"
                     messages = update_chat(messages, "user", stmt)
                     mail_response = get_chatgpt_response(messages)
-                    speak('Sure')
+                    speak("Sure")
                     print(mail_response)
-                    dict = json.loads(mail_response[mail_response.index(
-                        "{"): mail_response.index("}")+1], strict=False)
+                    dict = json.loads(
+                        mail_response[
+                            mail_response.index("{") : mail_response.index("}") + 1
+                        ],
+                        strict=False,
+                    )
                     reciever = f"{dict.get['reciever']}@gmail.com"
                     subject = f"{dict.get('subject')}"
                     content = f"{dict.get('content')}"
@@ -258,7 +270,7 @@ def main():
                     msg["From"] = mymail
                     msg["To"] = reciever
                     msg.set_content(content)
-                    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
                         server.login(mymail, mypass)
                         server.send_message(msg)
                         server.quit()
@@ -275,12 +287,12 @@ def main():
                     user_input = q
                     messages = update_chat(messages, "user", user_input)
                     model_response = get_chatgpt_response(messages)
-                    messages = update_chat(
-                        messages, "assistant", model_response)
+                    messages = update_chat(messages, "assistant", model_response)
                     print(f"{model_response}\n")
                     words = model_response.split()
-                    grouped_words = [' '.join(words[i: i + 10])
-                                     for i in range(0, len(words), 10)]
+                    grouped_words = [
+                        " ".join(words[i : i + 10]) for i in range(0, len(words), 10)
+                    ]
                     for i in grouped_words:
                         lq.append(f"Response : {''.join(i)}")
                         window["-LB-"].update(lq)
@@ -292,7 +304,7 @@ def main():
                     speak(model_response)
 
                 print(transcript)
-                lq.append(f'Response : {transcript}')
+                lq.append(f"Response : {transcript}")
                 window.refresh()
             window.refresh()
 
@@ -301,23 +313,21 @@ def main():
 
 
 col_1 = [
-    [sg.LB(lq, font=(None, 11), size=(70, 30), key="-LB-")],  # user's query
+    [sg.Text(lq, font=(None, 11), size=(70, 30), key="-LB-")],  # user's query
     # state of the takeCommand function (reassignment)
     [sg.Text(state, font=(None, 15), key="-ST-")],
 ]
 col_2 = [
-    [sg.Button('Start', size=(8, 1))],
-    [sg.Button('Terminate', size=(8, 1))],
-    [sg.Button('Clear', size=(8, 1))],
-    [sg.Button('Mute', size=(8, 1), button_color="red")]
+    [sg.Button("Start", size=(8, 1))],
+    [sg.Button("Terminate", size=(8, 1))],
+    [sg.Button("Clear", size=(8, 1))],
+    [sg.Button("Mute", size=(8, 1), button_color="red")],
 ]
 
-layout = [
-    [sg.Col(col_1), sg.VerticalSeparator(), sg.Col(col_2)]
-]
+layout = [[sg.Col(col_1), sg.VerticalSeparator(), sg.Col(col_2)]]
 
 # STEP 2 - create the window
-window = sg.Window('Voithea', layout)
+window = sg.Window("Voithea", layout)
 
 # STEP3 - the event loop
 while True:
@@ -328,23 +338,23 @@ while True:
     window.refresh()
 
     # If user closed window with X or if user clicked "Exit" button then exit
-    if event == sg.WIN_CLOSED or event == 'Terminate':
+    if event == sg.WIN_CLOSED or event == "Terminate":
         window["-LB-"].update(lq)
         window.refresh()
         stop_value = 1
         break
 
-    if event == 'Start':
+    if event == "Start":
         window["-LB-"].update(lq)
         window.refresh()
         main()
 
-    if event == 'Clear':
+    if event == "Clear":
         lq = []
         window["-LB-"].update(lq)
         window.refresh()
 
-    if event == 'Mute':
+    if event == "Mute":
         mute_value = 1
         lq.append()
         window["-LB-"].update(lq)
